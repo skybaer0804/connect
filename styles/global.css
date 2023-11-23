@@ -1,0 +1,25 @@
+body.dark {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+body.dark a {
+  color: #ffffff;
+}
+
+body.light {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+body.light a {
+  color: #000000;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
