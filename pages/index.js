@@ -6,19 +6,14 @@ import MovieList from "@/components/MovieList";
 import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 
-export default function Home() {
-  const [movies, setMovies] = useState([]);
+export async function getStaticProps() {
+  const res = await axios.get("/movies");
+  const movies = res.data.results ?? [];
 
-  async function getMovies() {
-    const res = await axios.get("/movies");
-    const nextMovies = res.data.results ?? [];
-    setMovies(nextMovies);
-  }
+  return { props: { movies } };
+}
 
-  useEffect(() => {
-    getMovies();
-  }, []);
-
+export default function Home({ movies }) {
   return (
     <>
       <Container page>

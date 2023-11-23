@@ -1,12 +1,13 @@
 import { useRouter } from "next/router";
 import Container from "@/components/Container";
-import Header from "@/components/Header";
 import MovieReviewList from "@/components/MovieReviewList";
 import styles from "@/styles/Movie.module.css";
 import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Image from "next/image";
 import Head from "next/head";
+import { notFound } from "next/navigation";
+import Spinner from "@/components/Spinner";
 
 const labels = {
   rating: {
@@ -17,18 +18,36 @@ const labels = {
   },
 };
 
-export default function Movie() {
-  const router = useRouter();
-  const id = router.query["id"];
+export async function getStaticPaths() {
+  const res = await axios.get("/movies");
+  const movies = res.data.results;
+  const paths = movies.map((movie) => ({
+    params: { id: String(movie.id) },
+  }));
 
-  const [movie, setMovie] = useState();
+  return {
+    paths,
+    fallback: true,
+  };
+}
+
+export async function getStaticProps(context) {
+  const targetId = context.params["id"];
+  let movie;
+  try {
+    const res = await axios.get(`/movies/${targetId}`);
+    movie = res.data;
+  } catch {
+    return { notFound: true };
+  }
+  return { props: { movie } };
+}
+
+export default function Movie({ movie }) {
   const [movieReviews, setMovieReviews] = useState([]);
 
-  async function getMovie(targetId) {
-    const res = await axios.get(`/movies/${targetId}`);
-    const nextMovie = res.data;
-    setMovie(nextMovie);
-  }
+  const router = useRouter();
+  const id = router.query["id"];
 
   async function getMovieReviews(targetId) {
     const res = await axios.get(`/movie_reviews/?movie_id=${targetId}`);
@@ -37,13 +56,19 @@ export default function Movie() {
   }
 
   useEffect(() => {
-    if (id) {
-      getMovie(id);
-      getMovieReviews(id);
-    }
+    if (!id) return;
+
+    getMovieReviews(id);
   }, [id]);
 
-  if (!movie) return null;
+  if (!movie) {
+    return (
+      <div className={styles.loading}>
+        <Spinner />
+        <p>로딩중입니다. 잠시만 기다려주세요.</p>
+      </div>
+    );
+  }
 
   return (
     <>
